@@ -9,19 +9,19 @@ def calcular_media(vetor):
 
 def girar_esquerda():
     """Função para simular a ação de girar à esquerda."""
-    print("Girando à esquerda")
+    print("Girando a roda esquerda")
 
 def girar_direita():
     """Função para simular a ação de girar à direita."""
-    print("Girando à direita")
+    print("Girando a roda direita")
 
 def ir_pra_frente(stop_event):
     """Função para simular a ação de ir para frente."""
     while not stop_event.is_set():
         print("Indo para frente")
-        time.sleep(1)  # Simula a ação contínua de ir para frente
+        time.sleep(4)  # Simula a ação contínua de ir para frente
 
-def analisar_vetor(vetor, limite_inferior, limite_lateral, intervalo, stop_event):
+def analisar_vetor(vetor, limite_central, limite_lateral, intervalo, stop_event):
     """Função para analisar as médias das partes do vetor em intervalos de tempo."""
     while not stop_event.is_set():
         tamanho = len(vetor)
@@ -41,12 +41,18 @@ def analisar_vetor(vetor, limite_inferior, limite_lateral, intervalo, stop_event
 
         print(f"Média Esquerda: {media_esquerda}, Média Central: {media_central}, Média Direita: {media_direita}")
 
-        if media_central > limite_inferior:
-            if media_direita > limite_lateral:
-                girar_esquerda()
-
-            if media_esquerda > limite_lateral:
-                girar_direita()
+        if media_central > limite_central:
+            print("Caminho livre a frente")
+            if media_direita > media_esquerda:    
+                if media_esquerda < limite_lateral:
+                    girar_esquerda()
+                else:
+                    print("Continue em frente")
+            elif media_direita < media_esquerda:
+                if media_direita < limite_lateral:
+                    girar_direita()
+                else:
+                    print("Continue em frente")
         else:
             print("Obstáculo a frente")
             if media_direita > media_esquerda:
@@ -60,7 +66,7 @@ def atualizar_vetor(vetor, stop_event):
     """Função para atualizar os valores do vetor de forma aleatória."""
     while not stop_event.is_set():
         for i in range(len(vetor)):
-            vetor[i] = random.randint(1, 100)  # Gera um valor aleatório entre 1 e 100
+            vetor[i] = random.randint(20, 60)  # Gera um valor aleatório entre 1 e 100
         print(f"Vetor atualizado: {vetor}")
         time.sleep(intervalo)  # Simula um intervalo de tempo para atualização do vetor
 
@@ -72,7 +78,7 @@ def monitorar_tecla(stop_event):
 
 # Exemplo de uso
 vetor_distancias = [60, 36, 81, 91, 98, 56, 93, 76, 57, 50, 45, 20]
-limite_inferior = 40
+limite_central = 30 # valor do limite central
 limite_lateral = 30 # valor limite de proximidade
 intervalo = 5  # Intervalo de 1 segundo entre cada análise
 
@@ -85,7 +91,7 @@ thread_ir_pra_frente.daemon = True
 thread_ir_pra_frente.start()
 
 # Inicia a análise do vetor em um thread separado
-thread_analisar_vetor = threading.Thread(target=analisar_vetor, args=(vetor_distancias, limite_inferior, limite_lateral, intervalo, stop_event))
+thread_analisar_vetor = threading.Thread(target=analisar_vetor, args=(vetor_distancias, limite_central, limite_lateral, intervalo, stop_event))
 thread_analisar_vetor.start()
 
 # Inicia a atualização do vetor em um thread separado
