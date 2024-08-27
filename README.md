@@ -41,9 +41,4 @@ Testando:
 
 sudo freenect-glview
 
-Códigos teste:
-
-https://drive.google.com/drive/folders/1fTfH4EE8_pe_wekBCpZ6XyPo-zr_juRx?usp=sharing
-
-
 
