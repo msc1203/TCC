@@ -4,6 +4,7 @@ import random
 import numpy as np
 import freenect
 import cv2 as cv
+from pynput import keyboard  # Se não funcionar, remover import; desabilitar função on_press() e adaptar key_mode()
 #import RPi.GPIO as GPIO #pip3 install RPi.GPIO
 #
 ## Configurações GPIO
@@ -64,6 +65,15 @@ def ir_pra_frente():
     #GPIO.output(IN2, GPIO.LOW)
     #GPIO.output(IN3, GPIO.HIGH)
     #GPIO.output(IN4, GPIO.LOW)
+    time.sleep(4)
+
+def ir_pra_tras():
+    #while not stop_event.is_set():
+    print("Indo para tras")
+    #GPIO.output(IN1, GPIO.LOW)
+    #GPIO.output(IN2, GPIO.HIGH)
+    #GPIO.output(IN3, GPIO.LOW)
+    #GPIO.output(IN4, GPIO.HIGH)
     time.sleep(4)
 
 def parar():
@@ -144,10 +154,8 @@ def depth_config():
     depth_scaled = depth_scaled[240:, :]
 
     return depth_scaled, array
-        
-def main():
-    
-    
+
+def auto_mode():
     while True:
         limite_central = 80
         limite_lateral = 80
@@ -156,11 +164,60 @@ def main():
         depth_colored = cv.applyColorMap(depth_data, cv.COLORMAP_JET)
         cv.imshow('Depth Image', depth_colored)
         new_depth_data = get_vector(depth_data)
-        analisar_vetor(new_depth_data,limite_central, limite_lateral )
-
+        analisar_vetor(new_depth_data, limite_central, limite_lateral )
         if cv.waitKey(1) & 0xFF == ord("q"):
             parar()
-            break
+            return False
+        elif cv.waitKey(1) & 0xFF == ord("a"):
+            return False
+            
+def on_press(key):
+    try:
+        if key.char in ("w", "8"):    # vai para frente
+            ir_pra_frente()
+        elif key.char in ("s", "2"):  # vai para tras
+            ir_pra_tras()
+        elif key.char in ("a", "4"):  # gira para a esquerda
+            girar_direita()
+        elif key.char in ("d", "6"):  # gira para a direita
+            girar_esquerda()
+        elif key.char == "q":         # troca para modo autonomo
+            return False
+    except AttributeError:
+        pass
+
+        
+def key_mode():
+    # while True:
+        # key = input("Press a key: ")
+        # if key == ("w" or "8"):   # Move forward
+        #     ir_pra_frente()
+        # elif key == ("s" or "2"): # Move Back
+        #     ir_pra_tras()
+        # elif key == ("a" or "4"): # Move Left
+        #     girar_direita()
+        # elif key == ("d" or "6"): # Move Right 
+        #     girar_esquerda()
+        # elif key == "q":
+        #     return True
+
+    ## USING KEYBOARD LIBRARY 
+    with keyboard.Listener(on_press=on_press) as listener:
+        print("on Listener")
+        listener.join()  # Keep the program running and listening for key events
+    print("Returning true")
+    return True
+
+def main():
+    mode = False
+    print("Starting in key mode")
+    while True:
+        if mode is False:
+            print("Im on key mode")
+            mode = key_mode()
+        elif mode is True:
+            print("Im on auto mode")
+            mode = auto_mode()
 
 if __name__ == "__main__":
     main()
