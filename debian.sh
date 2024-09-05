@@ -12,8 +12,10 @@ sudo apt install libxmu-dev -y
 sudo apt install libxi-dev -y
 sudo apt install libusb-1.0-0-dev -y
 sudo apt install cython -y
+sudo apt install python3-opencv -y
+sudo pip3 install pynput -y
 
-git clone http://github.com/OpenKinect/libfreenect.git
+git clone --branch debian http://github.com/OpenKinect/libfreenect.git
 mv libfreenect $HOME
 cd $HOME/libfreenect
 mkdir $HOME/libfreenect/build
