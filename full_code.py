@@ -2,31 +2,38 @@ import time
 import threading
 import random
 import numpy as np
-import freenect
+#import freenect
 import cv2 as cv
 from pynput import keyboard  # Se não funcionar, remover import; desabilitar função on_press() e adaptar key_mode()
-#import RPi.GPIO as GPIO #pip3 install RPi.GPIO
+import RPi.GPIO as GPIO #pip3 install RPi.GPIO
 #
 ## Configurações GPIO
-#GPIO.setmode(GPIO.BCM)
+#GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM) 
 ## Motor Esquerdo
-#IN1 = 17  
-#IN2 = 27
+IN1 = 17  
+IN2 = 27
 ## Motor Direito
-#IN3 = 23  
-#IN4 = 24
-## PWM's
-#ENA = 22  # PWM para Motor Esquerdo
-#ENB = 25  # PWM para Motor Direito
+IN3 = 23  
+IN4 = 24
 #
+FREQ = 100  # PWM Frequency
+TS = 0.05    # Time sleep para ativação do motor
 ## Configurar os pinos como saída
-#GPIO.setup(IN1, GPIO.OUT)
-#GPIO.setup(IN2, GPIO.OUT)
-#GPIO.setup(IN3, GPIO.OUT)
-#GPIO.setup(IN4, GPIO.OUT)
-#GPIO.setup(ENA, GPIO.OUT)
-#GPIO.setup(ENB, GPIO.OUT)
+GPIO.setup(17, GPIO.OUT)
+GPIO.setup(27, GPIO.OUT)
+GPIO.setup(23, GPIO.OUT)
+GPIO.setup(24, GPIO.OUT)
+
+pwm11 = GPIO.PWM(17, FREQ)
+pwm21 = GPIO.PWM(27, FREQ)
+pwm12 = GPIO.PWM(23, FREQ)
+pwm22 = GPIO.PWM(24, FREQ)
+
+# FRENTE -> PWM 11  21 == HIGH  IN1 IN2
+# TRAS -> PWM  12  22 == HIGH
 #
+
 ## Configurar PWM
 #pwm_a = GPIO.PWM(ENA, 1000)  # 1kHz para motor esquerdo
 #pwm_b = GPIO.PWM(ENB, 1000)  # 1kHz para motor direito
@@ -42,48 +49,78 @@ def calcular_media(vetor):
 def girar_esquerda():
     #while not stop_event.is_set():
     print("Girando a roda esquerda")
-    #GPIO.output(IN1, GPIO.HIGH)
-    #GPIO.output(IN2, GPIO.LOW)
-    #GPIO.output(IN3, GPIO.LOW)
-    #GPIO.output(IN4, GPIO.HIGH)
-    time.sleep(4)
+    #pwm11.stop()
+    #pwm21.start(50)
+    pwm12.start(50)
+    #pwm22.stop()
+    # GPIO.output(IN1, GPIO.LOW)
+    # GPIO.output(IN2, GPIO.LOW)
+    # GPIO.output(IN3, GPIO.HIGH)
+    # GPIO.output(IN4, GPIO.LOW)
+    time.sleep(TS)
+    parar()
+    #pwm21.stop()
+    #pwm22.stop()
     
 
 def girar_direita():
     #while not stop_event.is_set():
     print("Girando a roda direita")
-    #GPIO.output(IN1, GPIO.LOW)
-    #GPIO.output(IN2, GPIO.HIGH)
-    #GPIO.output(IN3, GPIO.HIGH)
-    #GPIO.output(IN4, GPIO.LOW)
-    time.sleep(4)
+    #pwm11.start()
+    #pwm21.start()
+    #pwm12.stop()
+    pwm22.start(50)
+    # GPIO.output(IN1, GPIO.LOW)
+    # GPIO.output(IN2, GPIO.LOW)
+    # GPIO.output(IN3, GPIO.LOW)
+    # GPIO.output(IN4, GPIO.HIGH)
+    time.sleep(TS)
+    parar()
 
 def ir_pra_frente():
     #while not stop_event.is_set():
     print("Indo para frente")
-    #GPIO.output(IN1, GPIO.HIGH)
-    #GPIO.output(IN2, GPIO.LOW)
-    #GPIO.output(IN3, GPIO.HIGH)
-    #GPIO.output(IN4, GPIO.LOW)
-    time.sleep(4)
+    pwm11.start(50)
+    pwm21.start(50)
+    #pwm12.stop()
+    #pwm22.stop()
+    # GPIO.output(IN1, GPIO.HIGH)
+    # GPIO.output(IN2, GPIO.HIGH)
+    # GPIO.output(IN3, GPIO.LOW)
+    # GPIO.output(IN4, GPIO.LOW)
+    time.sleep(TS)
+    parar()
+    #pwm11.stop()
+    #pwm21.stop()
 
 def ir_pra_tras():
     #while not stop_event.is_set():
     print("Indo para tras")
-    #GPIO.output(IN1, GPIO.LOW)
-    #GPIO.output(IN2, GPIO.HIGH)
-    #GPIO.output(IN3, GPIO.LOW)
-    #GPIO.output(IN4, GPIO.HIGH)
-    time.sleep(4)
+    #pwm11.stop()
+    #pwm21.start(50)
+    pwm12.start(50)
+    pwm22.start(50)
+    # GPIO.output(IN1, GPIO.LOW)
+    # GPIO.output(IN2, GPIO.LOW)
+    # GPIO.output(IN3, GPIO.HIGH)
+    # GPIO.output(IN4, GPIO.HIGH)
+    #pwm21.stop()
+    #pwm22.stop()
+    time.sleep(TS)
+    parar()
 
 def parar():
     #while not stop_event.is_set():
     print("Parando motores")
-    #GPIO.output(IN1, GPIO.LOW)
-    #GPIO.output(IN2, GPIO.LOW)
-    #GPIO.output(IN3, GPIO.LOW)
-    #GPIO.output(IN4, GPIO.LOW)
-    time.sleep(4)
+    pwm11.stop()
+    pwm21.stop()
+    pwm12.stop()
+    pwm22.stop()
+    # GPIO.output(IN1, GPIO.LOW)
+    # GPIO.output(IN2, GPIO.LOW)
+    # GPIO.output(IN3, GPIO.LOW)
+    # GPIO.output(IN4, GPIO.LOW)
+    #time.sleep(1)
 
 def analisar_vetor(vetor, limite_central, limite_lateral):
     #while not stop_event.is_set():
@@ -181,6 +218,8 @@ def on_press(key):
             girar_direita()
         elif key.char in ("d", "6"):  # gira para a direita
             girar_esquerda()
+        elif key.char in ("p"):        # para os motores
+            parar()
         elif key.char == "q":         # troca para modo autonomo
             return False
     except AttributeError:
@@ -210,6 +249,7 @@ def key_mode():
 
 def main():
     mode = False
+    parar()
     print("Starting in key mode")
     while True:
         if mode is False:
@@ -217,7 +257,9 @@ def main():
             mode = key_mode()
         elif mode is True:
             print("Im on auto mode")
-            mode = auto_mode()
+            GPIO.cleanup()
+            parar()
+            #mode = auto_mode()
 
 if __name__ == "__main__":
     main()
