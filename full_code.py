@@ -2,13 +2,14 @@ import time
 import threading
 import random
 import numpy as np
-#import freenect
+import freenect
 import cv2 as cv
-from pynput import keyboard  # Se não funcionar, remover import; desabilitar função on_press() e adaptar key_mode()
+#from pynput import keyboard  # Se não funcionar, remover import; desabilitar função on_press() e adaptar key_mode()
+import keyboard
 import RPi.GPIO as GPIO #pip3 install RPi.GPIO
 #
 ## Configurações GPIO
-#GPIO.setmode(GPIO.BOARD)
+# GPIO.setmode(GPIO.BOARD)
 GPIO.setmode(GPIO.BCM) 
 ## Motor Esquerdo
 IN1 = 17  
@@ -32,13 +33,6 @@ pwm22 = GPIO.PWM(24, FREQ)
 
 # FRENTE -> PWM 11  21 == HIGH  IN1 IN2
 # TRAS -> PWM  12  22 == HIGH
-#
-
-## Configurar PWM
-#pwm_a = GPIO.PWM(ENA, 1000)  # 1kHz para motor esquerdo
-#pwm_b = GPIO.PWM(ENB, 1000)  # 1kHz para motor direito
-#pwm_a.start(25)  #duty cycle
-#pwm_b.start(25)  #duty cycle
 
 def calcular_media(vetor):
     largura = len(vetor)
@@ -47,7 +41,6 @@ def calcular_media(vetor):
     return media
 
 def girar_esquerda():
-    #while not stop_event.is_set():
     print("Girando a roda esquerda")
     #pwm11.stop()
     #pwm21.start(50)
@@ -59,12 +52,9 @@ def girar_esquerda():
     # GPIO.output(IN4, GPIO.LOW)
     time.sleep(TS)
     parar()
-    #pwm21.stop()
-    #pwm22.stop()
     
 
 def girar_direita():
-    #while not stop_event.is_set():
     print("Girando a roda direita")
     #pwm11.start()
     #pwm21.start()
@@ -78,7 +68,6 @@ def girar_direita():
     parar()
 
 def ir_pra_frente():
-    #while not stop_event.is_set():
     print("Indo para frente")
     pwm11.start(50)
     pwm21.start(50)
@@ -90,11 +79,8 @@ def ir_pra_frente():
     # GPIO.output(IN4, GPIO.LOW)
     time.sleep(TS)
     parar()
-    #pwm11.stop()
-    #pwm21.stop()
 
 def ir_pra_tras():
-    #while not stop_event.is_set():
     print("Indo para tras")
     #pwm11.stop()
     #pwm21.start(50)
@@ -104,13 +90,10 @@ def ir_pra_tras():
     # GPIO.output(IN2, GPIO.LOW)
     # GPIO.output(IN3, GPIO.HIGH)
     # GPIO.output(IN4, GPIO.HIGH)
-    #pwm21.stop()
-    #pwm22.stop()
     time.sleep(TS)
     parar()
 
 def parar():
-    #while not stop_event.is_set():
     print("Parando motores")
     pwm11.stop()
     pwm21.stop()
@@ -120,7 +103,6 @@ def parar():
     # GPIO.output(IN2, GPIO.LOW)
     # GPIO.output(IN3, GPIO.LOW)
     # GPIO.output(IN4, GPIO.LOW)
-    #time.sleep(1)
 
 def analisar_vetor(vetor, limite_central, limite_lateral):
     #while not stop_event.is_set():
@@ -168,8 +150,6 @@ def analisar_vetor(vetor, limite_central, limite_lateral):
 def monitorar_tecla(stop_event):
     input("Pressione 'Enter' para parar...")
     stop_event.set()
-    #pwm_a.stop()
-    #pwm_b.stop()
 
 def get_vector(vector):
     matriz_sem_colunas = vector[:, 2:-2]
@@ -202,50 +182,50 @@ def auto_mode():
         cv.imshow('Depth Image', depth_colored)
         new_depth_data = get_vector(depth_data)
         analisar_vetor(new_depth_data, limite_central, limite_lateral )
-        if cv.waitKey(1) & 0xFF == ord("q"):
+        if keyboard.is_pressed("q"):
             parar()
             return False
-        elif cv.waitKey(1) & 0xFF == ord("a"):
+        elif keyboard.is_pressed("a"):
             return False
             
-def on_press(key):
-    try:
-        if key.char in ("w", "8"):    # vai para frente
-            ir_pra_frente()
-        elif key.char in ("s", "2"):  # vai para tras
-            ir_pra_tras()
-        elif key.char in ("a", "4"):  # gira para a esquerda
-            girar_direita()
-        elif key.char in ("d", "6"):  # gira para a direita
-            girar_esquerda()
-        elif key.char in ("p"):        # para os motores
-            parar()
-        elif key.char == "q":         # troca para modo autonomo
-            return False
-    except AttributeError:
-        pass
+# def on_press(key):
+#     try:
+#         if key.char in ("w", "8"):    # vai para frente
+#             ir_pra_frente()
+#         elif key.char in ("s", "2"):  # vai para tras
+#             ir_pra_tras()
+#         elif key.char in ("a", "4"):  # gira para a esquerda
+#             girar_direita()
+#         elif key.char in ("d", "6"):  # gira para a direita
+#             girar_esquerda()
+#         elif key.char in ("p"):        # para os motores
+#             parar()
+#         elif key.char == "q":         # troca para modo autonomo
+#             return False
+#     except AttributeError:
+#         pass
 
         
 def key_mode():
-    # while True:
-        # key = input("Press a key: ")
-        # if key == ("w" or "8"):   # Move forward
-        #     ir_pra_frente()
-        # elif key == ("s" or "2"): # Move Back
-        #     ir_pra_tras()
-        # elif key == ("a" or "4"): # Move Left
-        #     girar_direita()
-        # elif key == ("d" or "6"): # Move Right 
-        #     girar_esquerda()
-        # elif key == "q":
-        #     return True
+    parar()
+    while True:
+        if   keyboard.is_pressed("w" or "8"):   # Move forward
+            ir_pra_frente()
+        elif keyboard.is_pressed("s" or "2"): # Move Back
+            ir_pra_tras()
+        elif keyboard.is_pressed("a" or "4"): # Move Left
+            girar_direita()
+        elif keyboard.is_pressed("d" or "6"): # Move Right 
+            girar_esquerda()
+        elif keyboard.is_pressed("q"):
+            return True
 
     ## USING KEYBOARD LIBRARY 
-    with keyboard.Listener(on_press=on_press) as listener:
-        print("on Listener")
-        listener.join()  # Keep the program running and listening for key events
-    print("Returning true")
-    return True
+    #with keyboard.Listener(on_press=on_press) as listener:
+    #    print("on Listener")
+    #    listener.join()  # Keep the program running and listening for key events
+    #print("Returning true")
+    #return True
 
 def main():
     mode = False
@@ -259,7 +239,7 @@ def main():
             print("Im on auto mode")
             GPIO.cleanup()
             parar()
-            #mode = auto_mode()
+            mode = auto_mode()
 
 if __name__ == "__main__":
     main()
